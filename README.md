@@ -1,5 +1,7 @@
 # credit-mon
 
+[![tests](https://github.com/rameshjs/credit-mon/actions/workflows/ci.yml/badge.svg)](https://github.com/rameshjs/credit-mon/actions/workflows/ci.yml)
+
 GNOME Shell panel widget that shows your DeepSeek and Z.ai (GLM) API credit
 balances, your observed spend, and your coding-plan quota.
 
