@@ -1,0 +1,12 @@
+[Unit]
+Description=credit-mon — periodic balance refresh
+
+[Timer]
+Unit=credit-mon.service
+OnStartupSec=45
+OnUnitActiveSec=@REFRESH_INTERVAL@
+AccuracySec=30s
+RandomizedDelaySec=20
+
+[Install]
+WantedBy=timers.target

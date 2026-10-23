@@ -1,0 +1,8 @@
+{
+  "uuid": "credit-mon@local",
+  "name": "Credit Monitor",
+  "description": "Shows DeepSeek and Z.ai credit balances, observed spend and coding-plan quota in the top panel. Balances are polled by a systemd user timer; API keys live in the GNOME Keyring and are never read by the shell process.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "session-modes": ["user"],
+  "version": 1
+}

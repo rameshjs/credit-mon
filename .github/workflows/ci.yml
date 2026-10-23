@@ -1,0 +1,31 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gjs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gjs
+
+      - name: Provider tests (Python, no GI required)
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Panel logic tests (gjs)
+        run: gjs -m tests/extension-test.js
+
+      - name: Check that no credential material is tracked
+        run: |
+          if git ls-files | grep -E '\.cred$|(^|/)credentials/|history\.jsonl$|alerts\.json$'; then
+            echo "credential material is tracked"; exit 1
+          fi
+          if git grep -nIE 'sk-[A-Za-z0-9]{16,}' -- ':!README.md' ':!llms.txt'; then
+            echo "possible API key committed"; exit 1
+          fi

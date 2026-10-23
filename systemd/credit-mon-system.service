@@ -1,0 +1,32 @@
+[Unit]
+Description=credit-mon — poll LLM provider balances (system)
+Documentation=file:/usr/local/lib/credit-mon/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=creditmon
+Group=creditmon
+Environment=CREDIT_MON_STATE_DIR=/run/credit-mon
+Environment=CREDIT_MON_CONFIG_DIR=/etc/credit-mon
+Environment=CREDIT_MON_SHARED=1
+Environment=XDG_STATE_HOME=/var/lib/credit-mon
+Environment=PYTHONUNBUFFERED=1
+SyslogIdentifier=credit-mon
+ExecStart=/usr/bin/python3 /usr/local/lib/credit-mon/run.py refresh
+TimeoutStartSec=120
+Nice=19
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+StateDirectory=credit-mon
+StateDirectoryMode=0700
+RuntimeDirectory=credit-mon
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+ReadWritePaths=/run/credit-mon
+# Filled in by install-system.sh, one line per stored key:
+#   LoadCredentialEncrypted=deepseek:/etc/credit-mon/credentials/deepseek.cred
+@@CREDENTIAL_LINES@@

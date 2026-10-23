@@ -1,0 +1,142 @@
+# credit-mon
+
+> GNOME Shell panel widget that displays DeepSeek and Z.ai (GLM) API credit
+> balances, observed spend and coding-plan quota. Balances are polled by a
+> systemd user timer; API keys are stored in the GNOME Keyring (or sealed with a
+> machine-bound key) and are never read by the Shell process.
+
+This file is written for automated agents that need to install or modify the
+project. Read it before changing code: several constraints here are not
+discoverable from the source alone.
+
+## Requirements
+
+- GNOME Shell 45 to 50 (verified on Ubuntu 26.04, Shell 50.1, mutter 50.1)
+- `python3` with PyGObject (`python3-gi`); `Secret-1` typelib for the keyring
+  backend (`gir1.2-secret-1`); `systemd-creds` for the fallback backend
+- `gjs` to run the JavaScript tests
+- No third-party Python packages are used. Standard library plus PyGObject only.
+
+## Setup
+
+```bash
+git clone https://github.com/rameshjs/credit-mon.git ~/credit-mon
+cd ~/credit-mon
+./install.sh
+```
+
+`install.sh` performs, in order: writes `~/.local/bin/credit-mon` (a shim that
+execs `python3 <repo>/run.py`), creates `~/.config/credit-mon/config.json`,
+generates the systemd user units from `systemd/*` substituting `@REPO_DIR@` with
+the absolute checkout path, enables `credit-mon.timer`, copies `extension/` to
+`~/.local/share/gnome-shell/extensions/credit-mon@local/`, and enables the
+extension.
+
+Then store one API key per provider. Input is prompted and hidden, so keys never
+appear in argv or shell history:
+
+```bash
+credit-mon keys set deepseek              # GNOME Keyring
+credit-mon keys set zai                   # GNOME Keyring
+credit-mon keys set zai --backend creds   # or systemd-creds, machine-bound
+systemctl --user start credit-mon.service
+credit-mon doctor                         # full environment check
+```
+
+Optional hardening (needs root, moves keys out of the user's reach):
+
+```bash
+sudo bash install-system.sh     # dedicated `creditmon` user, system unit,
+                                # keys sealed to host key + TPM2, snapshot in
+                                # /run/credit-mon/state.json
+sudo bash uninstall-system.sh
+```
+
+## Runtime layout
+
+| Path | Role |
+|---|---|
+| `credit_mon/cli.py` | argument parsing, `refresh` pipeline, `keys`, `status`, `doctor` |
+| `credit_mon/providers.py` | provider adapters; `Reading` dataclass; HTTP helper; `REGISTRY` |
+| `credit_mon/secrets.py` | backend order: systemd credential dir, then keyring, then `systemd-creds` file |
+| `credit_mon/history.py` | JSONL snapshots; derives spend/burn, ignores top-ups |
+| `credit_mon/state.py` | atomic snapshot in `$XDG_RUNTIME_DIR/credit-mon/state.json` |
+| `credit_mon/config.py` | defaults merged with `~/.config/credit-mon/config.json` |
+| `extension/extension.js` | panel button, menu assembly, actions |
+| `extension/ui.js` | widget builders, Cairo sparkline, quota bars |
+| `extension/util.js` | pure display logic (no GI imports, unit tested) |
+| `extension/stylesheet.css` | all styling, namespaced `.cm-*` |
+| `dev/probe.sh` | headless Shell harness that reports real widget allocations |
+| `dev/fake_state.py` | synthetic snapshot used by the harness |
+
+Data flow: timer to `credit-mon.service` (`run.py refresh`) to providers to
+`state.json` (atomically replaced) to the extension (reads the file every 60 s,
+makes no network calls).
+
+## Environment variables
+
+| Variable | Effect |
+|---|---|
+| `CREDIT_MON_STATE_DIR` | override snapshot directory (system unit uses `/run/credit-mon`) |
+| `CREDIT_MON_CONFIG_DIR` | override config directory (system unit uses `/etc/credit-mon`) |
+| `CREDIT_MON_SHARED=1` | write snapshot `0644` and directory `0755` instead of `0600` / `0700` |
+| `XDG_STATE_HOME` | location of `history.jsonl` and `alerts.json` |
+| `CREDENTIALS_DIRECTORY` | set by systemd when `LoadCredentialEncrypted=` is used; read first |
+
+## Constraints and gotchas
+
+1. Extension JavaScript is imported once per Shell process
+   (`extensionSystem.js`: "Extensions can only be imported once"). After editing
+   any file in `extension/`, a logout/login is required. CSS and `config.json`
+   reload on `gnome-extensions disable` followed by `gnome-extensions enable`.
+2. `gnome-extensions disable <uuid>` removes the uuid from
+   `org.gnome.shell enabled-extensions`. Any tooling that disables the extension
+   must re-enable it, otherwise nothing loads at the next login.
+3. GNOME 50 removed the `spacing` and `vertical` GObject properties from
+   `St.BoxLayout`. Set spacing in CSS and orientation with
+   `Clutter.Orientation.VERTICAL`; passing either to the constructor throws
+   `No property spacing on StBoxLayout`.
+4. Extension stylesheets load only while that extension is enabled. When testing
+   widgets from another extension, load the sheet explicitly with
+   `St.ThemeContext.get_for_stage(global.stage).get_theme().load_stylesheet(file)`.
+5. `dconf` writes escape `XDG_CONFIG_HOME`: the dconf service resolves the real
+   `$HOME`. Any script that runs a throwaway Shell must set `DCONF_PROFILE` to a
+   separate profile, or it will overwrite the live session's
+   `enabled-extensions`. `dev/probe.sh` does this and additionally restores the
+   live value if it detects a change.
+6. Screenshots and screencast are blocked in headless Shell 50 (`Screenshot is
+   not allowed`; there is no unsafe-mode switch in mutter 50). Verify layout with
+   `dev/probe.sh`, which logs allocations instead of pixels.
+7. `refresh_minutes` is baked into `credit-mon.timer` at install time. Change the
+   config and re-run `./install.sh`, or edit the timer; `credit-mon doctor`
+   reports drift.
+8. Neither DeepSeek nor Z.ai offers scoped or read-only API keys. Do not describe
+   the design as least-privilege; it is credential isolation.
+9. Z.ai endpoints are undocumented console routes. Parse defensively: a changed
+   shape must degrade to a warning, never an exception that kills the row.
+10. The Z.ai account endpoint accepts a bare `Authorization: <key>`; other routes
+    expect `Bearer <key>`. `http_json_any_auth()` retries both on 401.
+
+## Testing
+
+```bash
+python3 -m unittest discover -s tests -v   # provider parsing vs local HTTP stub
+gjs -m tests/extension-test.js             # panel formatting logic
+dev/probe.sh                               # layout probe, prints PROBE lines
+```
+
+`dev/probe.sh` must report `live session untouched` at the end. A `HARNESS
+LEAKED` line means the probe modified `enabled-extensions`; it restores the
+value and exits 3.
+
+## Security model summary
+
+| Level | Store | Readable by the user's own processes |
+|---|---|---|
+| 1 | GNOME Keyring (login password) | yes, after login |
+| 2 | `systemd-creds --user --with-key=host` | yes, via `systemd-creds.socket` helper |
+| 3 | `/etc/credit-mon/credentials/*.cred`, `0400 root`, host key + TPM2 | no |
+
+Never commit a `.cred` file, `config.json`, `history.jsonl`, `alerts.json`, or a
+snapshot. `.gitignore` covers all of them; keys are only accepted through
+`credit-mon keys set`, which compares nothing against the working tree.

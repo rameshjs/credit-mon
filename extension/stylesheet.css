@@ -1,0 +1,200 @@
+/* credit-mon — theme-neutral styling.
+ *
+ * Colours are expressed as alpha-blended greys (rgba(128,128,128,x)) so the
+ * widget reads correctly on both the light and the dark GNOME theme; only the
+ * provider accent dots carry hue. Nothing here overrides global theme rules:
+ * every selector is namespaced with .cm- or .credit-mon-.
+ */
+
+/* ---------------------------------------------------------- panel pill --- */
+
+.cm-pill {
+    spacing: 8px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background-color: rgba(128, 128, 128, 0.13);
+    border: 1px solid rgba(128, 128, 128, 0.16);
+}
+
+.cm-pill:hover {
+    background-color: rgba(128, 128, 128, 0.22);
+    border-color: rgba(128, 128, 128, 0.24);
+}
+
+.cm-seg {
+    spacing: 6px;
+}
+
+.cm-name {
+    font-size: 0.82em;
+    letter-spacing: 0.4px;
+    opacity: 0.6;
+}
+
+.cm-value {
+    font-size: 0.95em;
+    font-weight: 600;
+}
+
+.cm-value-low {
+    color: #f5a623;
+    opacity: 1;
+}
+
+.cm-divider-v {
+    width: 1px;
+    height: 11px;
+    margin: 0 2px;
+    background-color: rgba(128, 128, 128, 0.32);
+}
+
+.cm-pill-stale {
+    opacity: 0.55;
+}
+
+.cm-pill-error .cm-value {
+    opacity: 0.75;
+}
+
+/* layout primitives (GNOME 50: spacing lives in CSS, not on the actor) */
+.cm-row { spacing: 8px; }
+.cm-row-tight { spacing: 6px; }
+.cm-row-flush { spacing: 0; }
+.cm-col { spacing: 7px; }
+.cm-col-tight { spacing: 4px; }
+.cm-header-row { spacing: 8px; }
+.cm-footer-row { spacing: 8px; }
+.cm-chips { spacing: 6px; }
+
+/* --------------------------------------------------------------- cards --- */
+
+.cm-card-item {
+    padding: 0;
+}
+
+.cm-card-item:ltr,
+.cm-card-item:rtl {
+    padding: 0;
+}
+
+.cm-card {
+    padding: 14px;
+    border-radius: 12px;
+    background-color: rgba(128, 128, 128, 0.10);
+    border: 1px solid rgba(128, 128, 128, 0.10);
+}
+
+.cm-card-title {
+    font-weight: 700;
+    font-size: 1.0em;
+}
+
+.cm-currency {
+    font-size: 0.75em;
+    letter-spacing: 1.4px;
+    opacity: 0.45;
+}
+
+.cm-amount {
+    font-size: 1.62em;
+    font-weight: 300;
+    letter-spacing: -0.2px;
+}
+
+.cm-chip {
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 0.8em;
+}
+
+.cm-chip-spend {
+    background-color: rgba(245, 166, 35, 0.16);
+    color: #f5a623;
+}
+
+.cm-kv {
+    spacing: 10px;
+}
+
+.cm-kv-label {
+    font-size: 0.85em;
+    opacity: 0.6;
+}
+
+.cm-kv-value {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.cm-kv-num {
+    min-width: 34px;
+}
+
+.cm-kv-reset {
+    font-size: 0.78em;
+    opacity: 0.45;
+    min-width: 62px;
+}
+
+.cm-track {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(128, 128, 128, 0.25);
+}
+
+.cm-divider-card {
+    height: 1px;
+    background-color: rgba(128, 128, 128, 0.16);
+    margin: 2px 0;
+}
+
+.cm-spark {
+    margin: 2px 0 0 0;
+}
+
+/* ------------------------------------------------------ headers / meta --- */
+
+.cm-header-item {
+    padding: 4px 12px 2px 12px;
+}
+
+.cm-header {
+    font-size: 0.78em;
+    letter-spacing: 1.6px;
+    opacity: 0.5;
+    font-weight: 700;
+}
+
+.cm-header-meta {
+    font-size: 0.78em;
+    opacity: 0.45;
+}
+
+.cm-footer {
+    font-size: 0.75em;
+    opacity: 0.4;
+}
+
+.cm-meta {
+    font-size: 0.8em;
+    opacity: 0.55;
+}
+
+.cm-empty {
+    font-size: 0.92em;
+    font-weight: 600;
+}
+
+.cm-error {
+    font-size: 0.85em;
+    color: #e01b24;
+}
+
+.cm-warn {
+    font-size: 0.8em;
+    color: #f5a623;
+}
+
+.cm-item-disabled {
+    opacity: 0.5;
+}

@@ -1,0 +1,22 @@
+[Unit]
+Description=credit-mon — poll LLM provider balances for the panel
+Documentation=file:@REPO_DIR@/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 @REPO_DIR@/run.py refresh
+# User services do not always inherit the session bus address, but libsecret
+# needs it to reach the keyring.
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+Environment=PYTHONUNBUFFERED=1
+SyslogIdentifier=credit-mon
+TimeoutStartSec=120
+Nice=19
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=-%h/.local/state/credit-mon
+ReadWritePaths=-%t/credit-mon
