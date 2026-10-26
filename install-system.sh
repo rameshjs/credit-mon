@@ -75,7 +75,7 @@ else
 fi
 
 CRED_LINES=""
-for provider in deepseek zai; do
+for provider in deepseek moonshot zai; do
     printf '\nPaste the %s API key (hidden input, empty = skip): ' "$provider" >&2
     IFS= read -rs key || true
     printf '\n' >&2

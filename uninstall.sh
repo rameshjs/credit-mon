@@ -23,7 +23,7 @@ rm -f "$HOME/.local/bin/credit-mon"
 
 if [[ $PURGE -eq 1 ]]; then
     echo "==> purging keys, config and history"
-    for p in deepseek zai; do
+    for p in deepseek moonshot zai; do
         /usr/bin/python3 -c "
 import sys; sys.path.insert(0, '$PWD')
 from credit_mon import secrets

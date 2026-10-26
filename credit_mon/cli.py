@@ -304,6 +304,8 @@ def cmd_doctor(args) -> int:
 
     for label, url in (
         ("api.deepseek.com", "https://api.deepseek.com/user/balance"),
+        ("api.moonshot.ai", "https://api.moonshot.ai/v1/users/me/balance"),
+        ("api.moonshot.cn", "https://api.moonshot.cn/v1/users/me/balance"),
         ("api.z.ai", "https://api.z.ai/api/biz/account/query-customer-account-report"),
         ("www.bigmodel.cn", "https://www.bigmodel.cn/api/biz/account/query-customer-account-report"),
     ):

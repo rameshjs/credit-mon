@@ -43,7 +43,7 @@ sed "s|@REPO_DIR@|$REPO_DIR|g" "$REPO_DIR/systemd/credit-mon.service" \
     > "$UNIT_DIR/credit-mon.service"
 chmod 644 "$UNIT_DIR/credit-mon.service"
 # The unit runs this exact path, so make sure it exists before enabling.
-grep -q "^ExecStart=$REPO_DIR/run.py" "$UNIT_DIR/credit-mon.service" \
+grep -q "^ExecStart=/usr/bin/python3 $REPO_DIR/run.py refresh$" "$UNIT_DIR/credit-mon.service" \
     || { echo "unit generation failed"; exit 1; }
 sed "s/@REFRESH_INTERVAL@/${REFRESH_MIN}min/" "$REPO_DIR/systemd/credit-mon.timer" \
     > "$UNIT_DIR/credit-mon.timer"
@@ -99,6 +99,7 @@ cat <<EOF
 Next: store one dedicated API key per provider (prompted, hidden input):
 
     credit-mon keys set deepseek
+    credit-mon keys set moonshot
     credit-mon keys set zai
 
 Then: systemctl --user start credit-mon.service

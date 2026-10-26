@@ -130,7 +130,7 @@ def system_credentials_present() -> dict[str, bool]:
     """Which providers have a root-sealed credential on this machine."""
     base = Path(SYSTEM_CRED_DIR)
     out = {}
-    for provider in ("deepseek", "zai"):
+    for provider in ("deepseek", "moonshot", "zai"):
         out[provider] = (base / f"{provider}.cred").exists()
     return out
 

@@ -21,9 +21,9 @@ mkdir -p "$EXT" "$XDG_RUNTIME_DIR/credit-mon" "$TMP/conf/credit-mon"
 cp -r "$REPO/extension" "$EXT/credit-mon@local"
 python3 "$REPO/dev/fake_state.py" "$XDG_RUNTIME_DIR/credit-mon/state.json" >/dev/null
 cat > "$TMP/conf/credit-mon/config.json" <<'JSON'
-{"panel":{"order":["deepseek","zai"],"show_provider_names":true,
-          "low_balance":{"deepseek":2.0,"zai":5.0},
-          "accents":{"deepseek":"#4d6bfe","zai":"#2dd4bf"}}}
+{"panel":{"order":["deepseek","moonshot","zai"],"show_provider_names":true,
+          "low_balance":{"deepseek":2.0,"moonshot":5.0,"zai":5.0},
+          "accents":{"deepseek":"#4d6bfe","moonshot":"#c084fc","zai":"#2dd4bf"}}}
 JSON
 
 mkdir -p "$EXT/cm-probe@local"

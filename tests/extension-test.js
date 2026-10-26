@@ -47,6 +47,8 @@ check('accent default', util.accentFor({}, 'deepseek'), '#4d6bfe');
 check('accent unknown provider', util.accentFor({}, 'nope'), '#8ab4f8');
 check('accent rejects junk', util.accentFor({panel: {accents: {zai: 'red'}}}, 'zai'), '#2dd4bf');
 check('display name', util.displayName('deepseek'), 'DeepSeek');
+check('Moonshot display name', util.displayName('moonshot'), 'Moonshot AI');
+check('Moonshot accent', util.accentFor({}, 'moonshot'), '#c084fc');
 
 print('panelView()');
 check('healthy text', util.panelView(healthy, config, NOW).text, 'DS $15.42  │  Z.ai ¥42.50');
@@ -100,6 +102,7 @@ check('days', util.agoText(259200), '3 d ago');
 print('shortName()');
 check('deepseek', util.shortName('deepseek'), 'DS');
 check('zai', util.shortName('zai'), 'Z.ai');
+check('moonshot', util.shortName('moonshot'), 'Kimi');
 check('unknown', util.shortName('anthropic'), 'ANT');
 
 print(failures === 0 ? '\nALL PASSED' : `\n${failures} FAILURE(S)`);

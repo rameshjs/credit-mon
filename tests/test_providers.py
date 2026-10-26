@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from credit_mon import history, providers  # noqa: E402
-from credit_mon.providers import DeepSeekProvider, ZaiProvider  # noqa: E402
+from credit_mon.providers import DeepSeekProvider, MoonshotProvider, ZaiProvider  # noqa: E402
 
 DEEPSEEK_BALANCE = {
     "is_available": True,
@@ -20,6 +20,13 @@ DEEPSEEK_BALANCE = {
         {"currency": "CNY", "total_balance": "110.00", "granted_balance": "10.00", "topped_up_balance": "100.00"},
         {"currency": "USD", "total_balance": "15.42", "granted_balance": "0.00", "topped_up_balance": "15.42"},
     ],
+}
+
+MOONSHOT_BALANCE = {
+    "code": 0,
+    "data": {"available_balance": 49.58894, "voucher_balance": 46.58893, "cash_balance": 3.00001},
+    "scode": "0x0",
+    "status": True,
 }
 
 ZAI_ACCOUNT = {"code": 200, "success": True, "data": {
@@ -53,6 +60,12 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/user/balance":
             return self._send(200, DEEPSEEK_BALANCE)
+        if path == "/v1/users/me/balance":
+            if self.headers.get("Authorization") != "Bearer sk-moonshot-test":
+                return self._send(401, {"error": {"message": "invalid token"}})
+            return self._send(200, MOONSHOT_BALANCE)
+        if path == "/failure/v1/users/me/balance":
+            return self._send(200, {"code": 5, "status": False, "message": "account unavailable"})
         if path == ZaiProvider.PATH_ACCOUNT:
             # emulate the bare-key-only auth style of the account endpoint
             if self.headers.get("Authorization", "").startswith("Bearer "):
@@ -102,6 +115,30 @@ class ProviderTests(unittest.TestCase):
         r = p.fetch({"currency": None}, "sk-test-12345")
         self.assertEqual(r.currency, "CNY")
         self.assertEqual(r.headline, "¥110.00")
+
+    def test_moonshot_balance(self):
+        p = MoonshotProvider()
+        p.BASES = {"intl": self.base}
+        r = p.fetch({"region": "intl"}, "sk-moonshot-test")
+        self.assertTrue(r.ok)
+        self.assertEqual(r.currency, "USD")
+        self.assertAlmostEqual(r.total, 49.58894)
+        self.assertEqual(r.headline, "$49.59")
+        self.assertEqual(dict(r.rows)["Cash"], "$3.00")
+        self.assertEqual(dict(r.rows)["Voucher"], "$46.59")
+
+    def test_moonshot_china_uses_cny(self):
+        p = MoonshotProvider()
+        p.BASES = {"intl": self.base, "cn": self.base}
+        r = p.fetch({"region": "cn"}, "sk-moonshot-test")
+        self.assertEqual(r.currency, "CNY")
+        self.assertEqual(r.headline, "¥49.59")
+
+    def test_moonshot_rejects_in_band_error(self):
+        p = MoonshotProvider()
+        p.BASES = {"intl": self.base + "/failure"}
+        with self.assertRaisesRegex(providers.ProviderError, "account unavailable"):
+            p.fetch({}, "sk-moonshot-test")
 
     def test_zai_balance_quota_plan_and_auth_fallback(self):
         p = ZaiProvider()

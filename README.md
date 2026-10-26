@@ -2,11 +2,11 @@
 
 [![tests](https://github.com/rameshjs/credit-mon/actions/workflows/ci.yml/badge.svg)](https://github.com/rameshjs/credit-mon/actions/workflows/ci.yml)
 
-GNOME Shell panel widget that shows your DeepSeek and Z.ai (GLM) API credit
-balances, your observed spend, and your coding-plan quota.
+GNOME Shell panel widget that shows your DeepSeek, Moonshot AI (Kimi) and Z.ai
+(GLM) API credit balances, your observed spend, and your coding-plan quota.
 
 ```
-● DeepSeek  $19.27  │  ● Z.ai  $18.45      ← panel capsule
+● DeepSeek  $19.27  │  ● Kimi  $49.59  │  ● Z.ai  $18.45   ← panel capsule
 ```
 
 Clicking it opens a menu with a card per provider: current balance, spend today,
@@ -19,7 +19,7 @@ process.
 
 ## Why it is built this way
 
-Neither DeepSeek nor Z.ai offers a read-only or scoped API key, so any key that
+None of these providers offers a read-only or scoped API key, so any key that
 can read a balance can also spend money. The useful protection is therefore
 isolation rather than scoping:
 
@@ -64,12 +64,16 @@ session only scans a newly created extension directory at login.
 Create a **dedicated** key for this widget, separate from your agent's key:
 
 - DeepSeek: https://platform.deepseek.com/api_keys
+- Moonshot AI: https://platform.moonshot.ai/console/api-keys (international) or
+  https://platform.moonshot.cn/console/api-keys (China). Keys are platform-specific;
+  set `providers.moonshot.region` to `intl` or `cn` to match your key.
 - Z.ai: https://z.ai/manage-apikey/apikey-list. Keys are split by type since
   October 2026: a *Standard* key bills pay-as-you-go, a *Coding Plan* key belongs
   to your plan. Use the entry point matching what you want to monitor.
 
 ```bash
 credit-mon keys set deepseek     # prompted, input hidden
+credit-mon keys set moonshot
 credit-mon keys set zai
 systemctl --user start credit-mon.service
 ```
@@ -101,14 +105,15 @@ the dark Shell theme; only the accent dots carry hue.
   "request_timeout": 20,
   "providers": {
     "deepseek": {"enabled": true, "currency": null},
+    "moonshot": {"enabled": true, "region": "intl"},
     "zai": {"enabled": true, "region": "intl", "show_quota": true}
   },
-  "alerts": {"enabled": true, "threshold": {"deepseek": 2.0, "zai": 5.0}},
+  "alerts": {"enabled": true, "threshold": {"deepseek": 2.0, "moonshot": 5.0, "zai": 5.0}},
   "panel": {
-    "order": ["deepseek", "zai"],
+    "order": ["deepseek", "moonshot", "zai"],
     "show_provider_names": true,
-    "low_balance": {"deepseek": 2.0, "zai": 5.0},
-    "accents": {"deepseek": "#4d6bfe", "zai": "#2dd4bf"}
+    "low_balance": {"deepseek": 2.0, "moonshot": 5.0, "zai": 5.0},
+    "accents": {"deepseek": "#4d6bfe", "moonshot": "#c084fc", "zai": "#2dd4bf"}
   }
 }
 ```
@@ -116,6 +121,8 @@ the dark Shell theme; only the accent dots carry hue.
 - `currency: null` uses the first currency the provider reports (DeepSeek
   returns CNY or USD depending on the account).
 - `region: "cn"` switches Z.ai endpoints from `api.z.ai` to `www.bigmodel.cn`.
+- For Moonshot, `region: "intl"` uses `api.moonshot.ai` (USD); `"cn"` uses
+  `api.moonshot.cn` (CNY). Choose the platform where you created the key.
 
 `refresh_minutes` is baked into the systemd timer at install time, so after
 changing it regenerate the schedule:
@@ -129,9 +136,9 @@ systemctl --user edit --full credit-mon.timer   # or edit the cadence by hand
 timer.
 
 Polling costs nothing: the endpoints are account-metadata reads, no model
-tokens are consumed. One cycle is 1 request to DeepSeek and 3 to Z.ai (up to 6
-if the auth-scheme fallback retries), so at the default 10 minutes that is
-roughly 600 requests per day.
+tokens are consumed. One cycle is 1 request each to DeepSeek and Moonshot and 3
+to Z.ai (up to 6 if the auth-scheme fallback retries), so at the default 10
+minutes that is roughly 720 requests per day.
 
 ## Security model
 
@@ -165,6 +172,7 @@ full account access including top-ups, and breaks on every logout.
 | Provider | Call | Status |
 |---|---|---|
 | DeepSeek | `GET https://api.deepseek.com/user/balance` | documented |
+| Moonshot AI | `GET https://api.moonshot.ai/v1/users/me/balance` (or `.cn`) | documented |
 | Z.ai | `GET /api/biz/account/query-customer-account-report` | console-internal, balance |
 | Z.ai | `GET /api/monitor/usage/quota/limit` | console-internal, 5h / weekly quota |
 | Z.ai | `GET /api/biz/subscription/list` | console-internal, plan and renewal |
@@ -173,7 +181,7 @@ The Z.ai routes are used by its own console and are undocumented, so every
 response is parsed defensively and a changed shape produces a per-provider
 warning rather than a broken panel.
 
-Neither provider exposes spend history in a consistent way, so "spend today",
+No provider exposes spend history in a consistent way, so "spend today",
 burn rate and days-left are derived from this tool's own snapshots
 (`~/.local/state/credit-mon/history.jsonl`), ignoring top-ups.
 
@@ -199,6 +207,7 @@ class MyProvider:
 
 
 REGISTRY = {DeepSeekProvider.name: DeepSeekProvider,
+            MoonshotProvider.name: MoonshotProvider,
             ZaiProvider.name: ZaiProvider,
             MyProvider.name: MyProvider}
 ```
@@ -251,6 +260,7 @@ session.
 | Extension disappeared after a session restart | the uuid is not in `enabled-extensions`; `gnome-extensions enable credit-mon@local`, then confirm with `credit-mon doctor` |
 | `keyring lookup failed` | login keyring locked (boot-time polling before login); use `--backend creds` |
 | Z.ai returns 401 | key type does not match the endpoint (Standard vs Coding Plan), or `region` is wrong |
+| Moonshot returns 401 | the key belongs to the other platform; switch `providers.moonshot.region` between `intl` and `cn` |
 | Edited the JS and nothing changed | GNOME imports an extension's JS once per Shell process; log out and back in (CSS and config reload on `gnome-extensions disable/enable`) |
 
 ## Files installed

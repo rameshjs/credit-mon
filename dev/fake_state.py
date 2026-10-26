@@ -25,8 +25,8 @@ payload = {
     "refresh_seconds": 600,
     "panel": {
         "show_provider_names": True,
-        "low_balance": {"deepseek": 2.0, "zai": 5.0},
-        "accents": {"deepseek": "#4d6bfe", "zai": "#2dd4bf"},
+        "low_balance": {"deepseek": 2.0, "moonshot": 5.0, "zai": 5.0},
+        "accents": {"deepseek": "#4d6bfe", "moonshot": "#c084fc", "zai": "#2dd4bf"},
     },
     "providers": [
         {
@@ -38,6 +38,16 @@ payload = {
             "spend_today": 0.36, "burn_per_day": 2.10, "days_left": 7.3,
             "warnings": [], "error": None, "fetched_at": now,
             "dashboard": "https://platform.deepseek.com/usage",
+        },
+        {
+            "provider": "moonshot", "ok": True, "currency": "USD", "total": 49.58894,
+            "headline": "$49.59",
+            "rows": [["Available", "$49.59"], ["Cash", "$3.00"], ["Voucher", "$46.59"]],
+            "quota": [],
+            "spark": spark(57.0, 49.58894, wobble=0.5),
+            "spend_today": 1.12, "burn_per_day": 3.25, "days_left": 15.3,
+            "warnings": [], "error": None, "fetched_at": now,
+            "dashboard": "https://platform.moonshot.ai/console/account",
         },
         {
             "provider": "zai", "ok": True, "currency": "CNY", "total": 42.5,

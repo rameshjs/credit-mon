@@ -23,5 +23,6 @@ done. To go back to the per-user poller:
 
     cd ~/credit-mon && ./install.sh
     credit-mon keys set deepseek
+    credit-mon keys set moonshot
     credit-mon keys set zai
 EOF

@@ -1,8 +1,8 @@
 # credit-mon
 
-> GNOME Shell panel widget that displays DeepSeek and Z.ai (GLM) API credit
-> balances, observed spend and coding-plan quota. Balances are polled by a
-> systemd user timer; API keys are stored in the GNOME Keyring (or sealed with a
+> GNOME Shell panel widget that displays DeepSeek, Moonshot AI (Kimi) and Z.ai
+> (GLM) API credit balances, observed spend and coding-plan quota. Balances are
+> polled by a systemd user timer; API keys are stored in the GNOME Keyring (or sealed with a
 > machine-bound key) and are never read by the Shell process.
 
 This file is written for automated agents that need to install or modify the
@@ -37,6 +37,7 @@ appear in argv or shell history:
 
 ```bash
 credit-mon keys set deepseek              # GNOME Keyring
+credit-mon keys set moonshot              # GNOME Keyring
 credit-mon keys set zai                   # GNOME Keyring
 credit-mon keys set zai --backend creds   # or systemd-creds, machine-bound
 systemctl --user start credit-mon.service
@@ -110,12 +111,15 @@ makes no network calls).
 7. `refresh_minutes` is baked into `credit-mon.timer` at install time. Change the
    config and re-run `./install.sh`, or edit the timer; `credit-mon doctor`
    reports drift.
-8. Neither DeepSeek nor Z.ai offers scoped or read-only API keys. Do not describe
+8. None of the providers offers scoped or read-only API keys. Do not describe
    the design as least-privilege; it is credential isolation.
 9. Z.ai endpoints are undocumented console routes. Parse defensively: a changed
    shape must degrade to a warning, never an exception that kills the row.
 10. The Z.ai account endpoint accepts a bare `Authorization: <key>`; other routes
     expect `Bearer <key>`. `http_json_any_auth()` retries both on 401.
+11. Moonshot's documented balance endpoint is `GET /v1/users/me/balance`.
+    `region: "intl"` uses `api.moonshot.ai` and USD; `"cn"` uses
+    `api.moonshot.cn` and CNY. Keys are platform-specific.
 
 ## Testing
 

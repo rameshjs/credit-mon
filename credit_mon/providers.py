@@ -1,7 +1,8 @@
 """Provider adapters: turn an API key into a normalised Reading.
 
-DeepSeek  GET /user/balance                       (documented)
-Z.ai      GET /api/biz/account/query-customer-account-report   (balance, undocumented)
+DeepSeek    GET /user/balance                       (documented)
+Moonshot AI GET /v1/users/me/balance                (documented)
+Z.ai        GET /api/biz/account/query-customer-account-report   (balance, undocumented)
           GET /api/monitor/usage/quota/limit                   (coding-plan quota)
           GET /api/biz/subscription/list                       (plan / renewal)
 
@@ -226,6 +227,52 @@ class DeepSeekProvider:
         return r
 
 
+# ------------------------------------------------------------- Moonshot AI ----
+
+class MoonshotProvider:
+    name = "moonshot"
+    display = "Moonshot AI"
+    BASES = {"intl": "https://api.moonshot.ai", "cn": "https://api.moonshot.cn"}
+    DASHBOARDS = {
+        "intl": "https://platform.moonshot.ai/console/account",
+        "cn": "https://platform.moonshot.cn/console/account",
+    }
+    dashboard = DASHBOARDS["intl"]
+
+    def fetch(self, cfg: dict, key: str, timeout: int = 20) -> Reading:
+        region = str(cfg.get("region") or "intl").lower()
+        base = self.BASES.get(region, self.BASES["intl"])
+        r = Reading(provider=self.name, dashboard=self.DASHBOARDS.get(region, self.DASHBOARDS["intl"]))
+        raw = http_json(
+            f"{base}/v1/users/me/balance",
+            {"Authorization": f"Bearer {key}"},
+            timeout,
+        )
+        if not _payload_ok(raw) or raw.get("status") is False:
+            raise ProviderError(_payload_error(raw))
+        data = raw.get("data") or {}
+        available = to_float(pick(data, "available_balance"))
+        if available is None:
+            raise ProviderError("no available_balance in response")
+
+        # The international API bills in USD; the China API bills in CNY.
+        currency = "CNY" if region == "cn" else "USD"
+        cash = to_float(pick(data, "cash_balance"))
+        voucher = to_float(pick(data, "voucher_balance"))
+        r.ok = True
+        r.currency = currency
+        r.total = available
+        r.headline = fmt_money(available, currency)
+        r.rows.append(("Available", r.headline))
+        if cash is not None:
+            r.rows.append(("Cash", fmt_money(cash, currency)))
+        if voucher is not None:
+            r.rows.append(("Voucher", fmt_money(voucher, currency)))
+        if available <= 0:
+            r.warnings.append("balance too low for API calls")
+        return r
+
+
 # ------------------------------------------------------------------ Z.ai ----
 
 class ZaiProvider:
@@ -353,6 +400,7 @@ class ZaiProvider:
 
 REGISTRY = {
     DeepSeekProvider.name: DeepSeekProvider,
+    MoonshotProvider.name: MoonshotProvider,
     ZaiProvider.name: ZaiProvider,
 }
 

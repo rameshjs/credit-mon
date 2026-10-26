@@ -1,7 +1,7 @@
 """Local balance history -> observed spend and burn rate.
 
-Neither DeepSeek nor Z.ai reports "what did I spend today" in a way both
-providers agree on, so we derive it from our own snapshots:
+The providers do not report "what did I spend today" consistently, so we
+derive it from our own snapshots:
 spend over an interval = previous balance - current balance, ignoring
 intervals where the balance went *up* (a top-up).
 """

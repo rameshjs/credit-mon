@@ -2,9 +2,9 @@
  * Loaded both by the extension (relative ESM import) and by tests/extension-test.js.
  */
 
-export const SHORT_NAME = {deepseek: 'DS', zai: 'Z.ai'};
-export const DISPLAY_NAME = {deepseek: 'DeepSeek', zai: 'Z.ai'};
-export const ACCENT = {deepseek: '#4d6bfe', zai: '#2dd4bf'};
+export const SHORT_NAME = {deepseek: 'DS', moonshot: 'Kimi', zai: 'Z.ai'};
+export const DISPLAY_NAME = {deepseek: 'DeepSeek', moonshot: 'Moonshot AI', zai: 'Z.ai'};
+export const ACCENT = {deepseek: '#4d6bfe', moonshot: '#c084fc', zai: '#2dd4bf'};
 
 const SYMBOLS = {USD: '$', CNY: '¥', EUR: '€', GBP: '£'};
 

@@ -19,6 +19,10 @@ DEFAULTS: dict = {
             "enabled": True,
             "currency": None,  # None -> first currency the API reports (CNY or USD)
         },
+        "moonshot": {
+            "enabled": True,
+            "region": "intl",  # intl -> api.moonshot.ai (USD) | cn -> api.moonshot.cn (CNY)
+        },
         "zai": {
             "enabled": True,
             "region": "intl",  # intl -> api.z.ai | cn -> www.bigmodel.cn
@@ -28,14 +32,14 @@ DEFAULTS: dict = {
     # Low-balance desktop notification, fires once per downward crossing.
     "alerts": {
         "enabled": True,
-        "threshold": {"deepseek": 2.0, "zai": 5.0},
+        "threshold": {"deepseek": 2.0, "moonshot": 5.0, "zai": 5.0},
     },
     # Panel rendering hints consumed by the GNOME extension.
     "panel": {
-        "order": ["deepseek", "zai"],
+        "order": ["deepseek", "moonshot", "zai"],
         "show_provider_names": True,
-        "low_balance": {"deepseek": 2.0, "zai": 5.0},
-        "accents": {"deepseek": "#4d6bfe", "zai": "#2dd4bf"},
+        "low_balance": {"deepseek": 2.0, "moonshot": 5.0, "zai": 5.0},
+        "accents": {"deepseek": "#4d6bfe", "moonshot": "#c084fc", "zai": "#2dd4bf"},
     },
 }
 
